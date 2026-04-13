@@ -1,5 +1,6 @@
 import { Outlet, NavLink, useNavigate } from 'react-router-dom'
 import { LayoutDashboard, Plus, Settings, Home, LogOut } from 'lucide-react'
+import { useSeller } from '../context/SellerContext.jsx'
 
 const navItems = [
   { to: '/dashboard', label: 'Dashboard', icon: LayoutDashboard, end: true },
@@ -8,14 +9,15 @@ const navItems = [
 
 export default function DashboardLayout() {
   const navigate = useNavigate()
+  const { currentUser } = useSeller()
   return (
     <div className="flex min-h-[calc(100vh-64px)]">
       {/* Sidebar */}
       <aside className="w-64 bg-navy-900 text-white flex flex-col shrink-0">
         <div className="p-6 border-b border-navy-800">
           <p className="text-xs text-navy-400 uppercase tracking-wider mb-1">Seller Portal</p>
-          <p className="font-semibold text-white">Marcus Holloway</p>
-          <p className="text-sm text-navy-400">mholloway@email.com</p>
+          <p className="font-semibold text-white">{currentUser?.name || 'Guest'}</p>
+          <p className="text-sm text-navy-400">{currentUser?.email || 'Not signed in'}</p>
         </div>
         <nav className="flex-1 p-4 space-y-1">
           {navItems.map(({ to, label, icon: Icon, end }) => (

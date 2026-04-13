@@ -1,18 +1,20 @@
 import { useMemo, useState } from 'react'
 import { useSearchParams } from 'react-router-dom'
 import { SlidersHorizontal, X, Search } from 'lucide-react'
-import { listings } from '../data/index.js'
 import { applyFilters } from '../utils/filters.js'
+import { useSeller } from '../context/SellerContext.jsx'
 import ListingCard from '../components/listings/ListingCard.jsx'
 
 const propertyTypes = ['Single Family', 'Condo', 'Townhouse', 'Multi-Family']
-const states = [...new Set(listings.map((l) => l.address.state))].sort()
 const PAGE_SIZE = 12
 
 export default function BrowseListings() {
+  const { allListings } = useSeller()
   const [searchParams, setSearchParams] = useSearchParams()
   const [showFilters, setShowFilters] = useState(false)
   const [page, setPage] = useState(1)
+
+  const states = useMemo(() => [...new Set(allListings.map((l) => l.address.state))].sort(), [allListings])
 
   const filters = {
     q: searchParams.get('q') || '',
@@ -55,12 +57,12 @@ export default function BrowseListings() {
     setPage(1)
   }
 
-  const filtered = useMemo(() => applyFilters(listings, filters), [searchParams.toString()])
+  const filtered = useMemo(() => applyFilters(allListings, filters), [allListings, searchParams.toString()])
   const totalPages = Math.ceil(filtered.length / PAGE_SIZE)
   const paged = filtered.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE)
   const hasFilters = filters.q || filters.minPrice || filters.maxPrice || filters.minBeds || filters.minBaths || filters.state || filters.propertyTypes.length > 0
 
-  const FilterPanel = () => (
+  const filterPanel = (
     <div className="space-y-6">
       {/* Search */}
       <div>
@@ -185,7 +187,7 @@ export default function BrowseListings() {
                 <button onClick={clearFilters} className="text-xs text-red-500 hover:text-red-600">Clear all</button>
               )}
             </div>
-            <FilterPanel />
+            {filterPanel}
           </div>
         </aside>
 
@@ -231,7 +233,7 @@ export default function BrowseListings() {
                 <h2 className="font-semibold text-gray-900">Filters</h2>
                 <button onClick={() => setShowFilters(false)}><X size={18} /></button>
               </div>
-              <FilterPanel />
+              {filterPanel}
             </div>
           )}
 

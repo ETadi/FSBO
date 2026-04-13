@@ -1,6 +1,6 @@
-import { useState } from 'react'
+import { useState, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { CheckCircle, ChevronRight, Home, Camera, DollarSign, Star, Eye } from 'lucide-react'
+import { CheckCircle, ChevronRight, Home, Camera, DollarSign, Star, Eye, X } from 'lucide-react'
 import { useSeller } from '../context/SellerContext.jsx'
 import { services, serviceCategories } from '../data/index.js'
 import { formatPrice } from '../utils/formatters.js'
@@ -33,7 +33,60 @@ export default function CreateListing() {
     beds: '', baths: '', sqft: '', lotSqft: '', yearBuilt: '', garage: 0,
     basement: false, pool: false, fireplace: false, description: ''
   })
-  const [photos] = useState(PLACEHOLDER_PHOTOS)
+  const [photos, setPhotos] = useState(PLACEHOLDER_PHOTOS)
+  const fileInputRef = useRef(null)
+
+  function handleFileBrowse() {
+    fileInputRef.current?.click()
+  }
+
+  function handleFilesSelected(e) {
+    const files = Array.from(e.target.files || [])
+    files.forEach((file) => {
+      const reader = new FileReader()
+      reader.onload = (ev) => {
+        setPhotos((prev) => [
+          ...prev,
+          {
+            id: 'upload-' + Date.now() + '-' + Math.random().toString(36).slice(2, 6),
+            url: ev.target.result,
+            caption: file.name.replace(/\.[^.]+$/, ''),
+            primary: prev.length === 0,
+          },
+        ])
+      }
+      reader.readAsDataURL(file)
+    })
+    // reset so the same file can be re-selected
+    e.target.value = ''
+  }
+
+  function handleDrop(e) {
+    e.preventDefault()
+    e.stopPropagation()
+    const files = Array.from(e.dataTransfer?.files || []).filter((f) => f.type.startsWith('image/'))
+    if (files.length) {
+      const fakeEvent = { target: { files }, preventDefault: () => {} }
+      handleFilesSelected(fakeEvent)
+    }
+  }
+
+  function removePhoto(id) {
+    setPhotos((prev) => {
+      const next = prev.filter((p) => p.id !== id)
+      // if we removed the primary, make the first one primary
+      if (next.length > 0 && !next.some((p) => p.primary)) {
+        next[0].primary = true
+      }
+      return next
+    })
+  }
+
+  function setPrimaryPhoto(id) {
+    setPhotos((prev) =>
+      prev.map((p) => ({ ...p, primary: p.id === id }))
+    )
+  }
   const [pricing, setPricing] = useState({ askingPrice: '', hoa: false, hoaMonthly: '', taxes: '', timeline: 'ASAP' })
   const [selectedServices, setSelectedServices] = useState([])
 
@@ -160,25 +213,67 @@ export default function CreateListing() {
       {step === 2 && (
         <div className="space-y-5">
           <h2 className="text-lg font-semibold text-navy-900">Photos</h2>
-          <div className="border-2 border-dashed border-gray-300 rounded-xl p-8 text-center bg-gray-50">
+
+          {/* Hidden file input */}
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept="image/*"
+            multiple
+            className="hidden"
+            onChange={handleFilesSelected}
+          />
+
+          {/* Drop zone */}
+          <div
+            className="border-2 border-dashed border-gray-300 rounded-xl p-8 text-center bg-gray-50 hover:border-navy-400 hover:bg-navy-50/30 transition-colors cursor-pointer"
+            onClick={handleFileBrowse}
+            onDragOver={(e) => { e.preventDefault(); e.stopPropagation() }}
+            onDrop={handleDrop}
+          >
             <Camera size={32} className="text-gray-400 mx-auto mb-3" />
             <p className="font-medium text-gray-700 mb-1">Drag & drop photos here</p>
             <p className="text-sm text-gray-400 mb-3">or click to browse from your computer</p>
-            <button className="px-4 py-2 bg-navy-800 text-white text-sm font-medium rounded-lg hover:bg-navy-900">
+            <button
+              type="button"
+              onClick={(e) => { e.stopPropagation(); handleFileBrowse() }}
+              className="px-4 py-2 bg-navy-800 text-white text-sm font-medium rounded-lg hover:bg-navy-900 transition-colors"
+            >
               Browse Files
             </button>
           </div>
-          <p className="text-sm text-gray-500">Sample photos pre-loaded for demo:</p>
-          <div className="grid grid-cols-3 gap-3">
-            {photos.map((photo) => (
-              <div key={photo.id} className="relative rounded-xl overflow-hidden h-28">
-                <img src={photo.url} alt={photo.caption} className="w-full h-full object-cover" />
-                {photo.primary && (
-                  <span className="absolute top-2 left-2 bg-navy-700 text-white text-xs px-2 py-0.5 rounded">Primary</span>
-                )}
+
+          {photos.length > 0 && (
+            <>
+              <p className="text-sm text-gray-500">{photos.length} photo{photos.length !== 1 ? 's' : ''} — click a photo to set as primary</p>
+              <div className="grid grid-cols-3 gap-3">
+                {photos.map((photo) => (
+                  <div
+                    key={photo.id}
+                    className={`relative rounded-xl overflow-hidden h-28 cursor-pointer ring-2 transition-all ${
+                      photo.primary ? 'ring-accent-500' : 'ring-transparent hover:ring-navy-300'
+                    }`}
+                    onClick={() => setPrimaryPhoto(photo.id)}
+                  >
+                    <img src={photo.url} alt={photo.caption} className="w-full h-full object-cover" />
+                    {photo.primary && (
+                      <span className="absolute top-2 left-2 bg-accent-500 text-white text-xs px-2 py-0.5 rounded font-medium">Primary</span>
+                    )}
+                    <button
+                      type="button"
+                      onClick={(e) => { e.stopPropagation(); removePhoto(photo.id) }}
+                      className="absolute top-2 right-2 w-6 h-6 bg-black/50 hover:bg-red-600 text-white rounded-full flex items-center justify-center transition-colors"
+                    >
+                      <X size={12} />
+                    </button>
+                    <div className="absolute bottom-0 inset-x-0 bg-gradient-to-t from-black/50 to-transparent px-2 py-1">
+                      <p className="text-white text-xs truncate">{photo.caption}</p>
+                    </div>
+                  </div>
+                ))}
               </div>
-            ))}
-          </div>
+            </>
+          )}
         </div>
       )}
 

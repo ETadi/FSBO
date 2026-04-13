@@ -19,16 +19,33 @@ function StatCard({ icon: Icon, label, value, sub, color }) {
 }
 
 export default function SellerDashboard() {
-  const { seller, myListings } = useSeller()
+  const { currentUser, myListings } = useSeller()
   const totalViews = myListings.reduce((s, l) => s + (l.stats?.views || 0), 0)
   const totalInquiries = myListings.reduce((s, l) => s + (l.stats?.inquiries || 0), 0)
+
+  /* If not logged in, show a prompt instead of crashing */
+  if (!currentUser) {
+    return (
+      <div className="p-8 text-center py-24">
+        <Home size={48} className="text-gray-300 mx-auto mb-4" />
+        <h1 className="text-2xl font-bold text-navy-900 mb-2">Sign in to access your dashboard</h1>
+        <p className="text-gray-500 mb-6">You need to be signed in to manage your listings and view your activity.</p>
+        <Link
+          to="/"
+          className="inline-flex items-center gap-2 px-6 py-3 bg-navy-800 hover:bg-navy-900 text-white font-medium rounded-xl text-sm transition-colors"
+        >
+          Go to Home Page
+        </Link>
+      </div>
+    )
+  }
 
   return (
     <div className="p-8">
       {/* Header */}
       <div className="flex items-center justify-between mb-8">
         <div>
-          <h1 className="text-2xl font-bold text-navy-900">Welcome back, {seller.name.split(' ')[0]}!</h1>
+          <h1 className="text-2xl font-bold text-navy-900">Welcome back, {currentUser.name.split(' ')[0]}!</h1>
           <p className="text-gray-500 mt-1">Here's an overview of your listings and activity.</p>
         </div>
         <Link

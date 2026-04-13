@@ -4,14 +4,16 @@ import {
   Bed, Bath, Square, Home, MapPin, Calendar, Eye, Heart, Share2,
   Phone, Mail, ChevronRight, Star, X, CheckCircle
 } from 'lucide-react'
-import { listings, services } from '../data/index.js'
+import { services } from '../data/index.js'
+import { useSeller } from '../context/SellerContext.jsx'
 import { formatPrice, formatSqft, formatDate } from '../utils/formatters.js'
 import ListingCard from '../components/listings/ListingCard.jsx'
 
 export default function ListingDetail() {
   const { id } = useParams()
   const navigate = useNavigate()
-  const listing = listings.find((l) => l.id === id)
+  const { allListings } = useSeller()
+  const listing = allListings.find((l) => l.id === id)
 
   const [activePhoto, setActivePhoto] = useState(0)
   const [lightboxOpen, setLightboxOpen] = useState(false)
@@ -31,7 +33,7 @@ export default function ListingDetail() {
 
   const { address, price, specs, details, description, features, photos, seller, stats: lstats, openHouses, services: svcIds } = listing
   const listingServices = (svcIds || []).map((sid) => services.find((s) => s.id === sid)).filter(Boolean)
-  const similar = listings.filter((l) => l.id !== id && l.address.state === address.state).slice(0, 4)
+  const similar = allListings.filter((l) => l.id !== id && l.address.state === address.state).slice(0, 4)
 
   function handleContact(e) {
     e.preventDefault()

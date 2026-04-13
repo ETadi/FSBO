@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Search, Home as HomeIcon, Camera, FileText, Star, TrendingUp, Shield, CheckCircle, ArrowRight, Quote } from 'lucide-react'
 import { Link } from 'react-router-dom'
-import { listings } from '../data/index.js'
+import { useSeller } from '../context/SellerContext.jsx'
 import ListingCard from '../components/listings/ListingCard.jsx'
 import { formatPrice } from '../utils/formatters.js'
 
@@ -55,7 +55,8 @@ const steps = [
 export default function Home() {
   const [query, setQuery] = useState('')
   const navigate = useNavigate()
-  const featured = listings.filter((l) => l.featured).slice(0, 6)
+  const { allListings } = useSeller()
+  const featured = allListings.filter((l) => l.featured).slice(0, 6)
 
   function handleSearch(e) {
     e.preventDefault()
