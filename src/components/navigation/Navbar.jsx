@@ -16,10 +16,25 @@ export default function Navbar() {
   const { itemCount } = useCart()
   const { currentUser, signOut } = useSeller()
   const [menuOpen, setMenuOpen] = useState(false)
+  const [menuVisible, setMenuVisible] = useState(false) // controls DOM presence with delay for close animation
   const [authModal, setAuthModal] = useState({ open: false, tab: 'signin' })
   const [userDropdown, setUserDropdown] = useState(false)
   const dropdownRef = useRef(null)
   const navigate = useNavigate()
+
+  // Handle menu open/close with animation
+  function toggleMenu() {
+    if (menuOpen) {
+      // Close: start animation, then remove from DOM after it finishes
+      setMenuOpen(false)
+      setTimeout(() => setMenuVisible(false), 200)
+    } else {
+      // Open: add to DOM, then start animation
+      setMenuVisible(true)
+      // Small delay to ensure DOM is rendered before animation starts
+      requestAnimationFrame(() => setMenuOpen(true))
+    }
+  }
 
   // Close dropdown when clicking outside
   useEffect(() => {
@@ -35,11 +50,13 @@ export default function Navbar() {
   function openSignIn() {
     setAuthModal({ open: true, tab: 'signin' })
     setMenuOpen(false)
+    setMenuVisible(false)
   }
 
   function openSignUp() {
     setAuthModal({ open: true, tab: 'signup' })
     setMenuOpen(false)
+    setMenuVisible(false)
   }
 
   function handleSignOut() {
@@ -164,7 +181,7 @@ export default function Navbar() {
               {/* Mobile hamburger */}
               <button
                 className="md:hidden p-2 text-gray-600 hover:text-navy-800"
-                onClick={() => setMenuOpen(!menuOpen)}
+                onClick={toggleMenu}
               >
                 {menuOpen ? <X size={22} /> : <Menu size={22} />}
               </button>
@@ -173,13 +190,15 @@ export default function Navbar() {
         </div>
 
         {/* Mobile menu */}
-        {menuOpen && (
-          <div className="md:hidden bg-white border-t border-gray-200 px-4 pb-4 pt-2 space-y-1">
+        {menuVisible && (
+          <div className={`md:hidden bg-white border-t border-gray-200 px-4 pb-4 pt-2 space-y-1 overflow-hidden ${
+            menuOpen ? 'animate-slide-down' : 'animate-slide-up'
+          }`}>
             {navLinks.map(({ to, label }) => (
               <NavLink
                 key={to}
                 to={to}
-                onClick={() => setMenuOpen(false)}
+                onClick={toggleMenu}
                 className="block px-3 py-2 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-100"
               >
                 {label}
@@ -199,20 +218,20 @@ export default function Navbar() {
                   </div>
                   <Link
                     to="/dashboard"
-                    onClick={() => setMenuOpen(false)}
+                    onClick={toggleMenu}
                     className="px-4 py-2 bg-navy-800 text-white text-sm font-medium rounded-lg text-center"
                   >
                     Seller Dashboard
                   </Link>
                   <Link
                     to="/dashboard/listings/new"
-                    onClick={() => setMenuOpen(false)}
+                    onClick={toggleMenu}
                     className="px-4 py-2 bg-accent-500 text-white text-sm font-medium rounded-lg text-center"
                   >
                     List a Home
                   </Link>
                   <button
-                    onClick={() => { handleSignOut(); setMenuOpen(false) }}
+                    onClick={() => { handleSignOut(); setMenuOpen(false); setMenuVisible(false) }}
                     className="px-4 py-2 border border-red-200 text-red-600 text-sm font-medium rounded-lg text-center"
                   >
                     Sign Out

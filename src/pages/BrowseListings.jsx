@@ -12,7 +12,18 @@ export default function BrowseListings() {
   const { allListings } = useSeller()
   const [searchParams, setSearchParams] = useSearchParams()
   const [showFilters, setShowFilters] = useState(false)
-  const [page, setPage] = useState(1)
+
+  // Page is stored in URL params so it survives back-navigation
+  const page = Number(searchParams.get('page')) || 1
+
+  function setPage(p) {
+    setSearchParams((prev) => {
+      const next = new URLSearchParams(prev)
+      if (p <= 1) next.delete('page')
+      else next.set('page', String(p))
+      return next
+    })
+  }
 
   const states = useMemo(() => [...new Set(allListings.map((l) => l.address.state))].sort(), [allListings])
 
@@ -32,9 +43,10 @@ export default function BrowseListings() {
       const next = new URLSearchParams(prev)
       if (!value) next.delete(key)
       else next.set(key, value)
+      // Reset page when filters change
+      next.delete('page')
       return next
     })
-    setPage(1)
   }
 
   function toggleType(type) {
@@ -47,14 +59,14 @@ export default function BrowseListings() {
       } else {
         next.append('type', type)
       }
+      // Reset page when filters change
+      next.delete('page')
       return next
     })
-    setPage(1)
   }
 
   function clearFilters() {
     setSearchParams({})
-    setPage(1)
   }
 
   const filtered = useMemo(() => applyFilters(allListings, filters), [allListings, searchParams.toString()])

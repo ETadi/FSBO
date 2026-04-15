@@ -1,4 +1,4 @@
-import { createContext, useContext, useState, useEffect } from 'react'
+import { createContext, useContext, useState, useEffect, useCallback, useMemo } from 'react'
 import { services } from '../data/index.js'
 
 const CartContext = createContext(null)
@@ -17,29 +17,39 @@ export function CartProvider({ children }) {
     localStorage.setItem('fsbo-cart', JSON.stringify(cart))
   }, [cart])
 
-  function addService(serviceId) {
-    if (cart.find((i) => i.serviceId === serviceId)) return
-    const svc = services.find((s) => s.id === serviceId)
-    if (!svc) return
-    setCart((prev) => [...prev, { serviceId, name: svc.name, price: svc.price, category: svc.category }])
-  }
+  const addService = useCallback((serviceId) => {
+    setCart((prev) => {
+      if (prev.find((i) => i.serviceId === serviceId)) return prev
+      const svc = services.find((s) => s.id === serviceId)
+      if (!svc) return prev
+      return [...prev, { serviceId, name: svc.name, price: svc.price, category: svc.category }]
+    })
+  }, [])
 
-  function removeService(serviceId) {
+  const removeService = useCallback((serviceId) => {
     setCart((prev) => prev.filter((i) => i.serviceId !== serviceId))
-  }
+  }, [])
 
-  function isInCart(serviceId) {
+  const isInCart = useCallback((serviceId) => {
     return cart.some((i) => i.serviceId === serviceId)
-  }
+  }, [cart])
 
-  function clearCart() {
+  const clearCart = useCallback(() => {
     setCart([])
-  }
+  }, [])
 
-  const cartTotal = cart.reduce((sum, i) => sum + i.price, 0)
+  const value = useMemo(() => ({
+    cart,
+    addService,
+    removeService,
+    isInCart,
+    clearCart,
+    cartTotal: cart.reduce((sum, i) => sum + i.price, 0),
+    itemCount: cart.length,
+  }), [cart, addService, removeService, isInCart, clearCart])
 
   return (
-    <CartContext.Provider value={{ cart, addService, removeService, isInCart, clearCart, cartTotal, itemCount: cart.length }}>
+    <CartContext.Provider value={value}>
       {children}
     </CartContext.Provider>
   )

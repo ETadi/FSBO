@@ -40,9 +40,19 @@ export default {
           '0%':   { opacity: '0', transform: 'translateY(12px)' },
           '100%': { opacity: '1', transform: 'translateY(0)' },
         },
+        'slide-down': {
+          '0%':   { opacity: '0', maxHeight: '0' },
+          '100%': { opacity: '1', maxHeight: '500px' },
+        },
+        'slide-up': {
+          '0%':   { opacity: '1', maxHeight: '500px' },
+          '100%': { opacity: '0', maxHeight: '0' },
+        },
       },
       animation: {
         'fade-in-up': 'fade-in-up 0.2s ease-out',
+        'slide-down': 'slide-down 0.25s ease-out forwards',
+        'slide-up': 'slide-up 0.2s ease-in forwards',
       },
     },
   },
