@@ -14,11 +14,13 @@ import Cart from './pages/Cart.jsx'
 import SellerDashboard from './pages/SellerDashboard.jsx'
 import CreateListing from './pages/CreateListing.jsx'
 import NotFound from './pages/NotFound.jsx'
+import ErrorPage from './pages/ErrorPage.jsx'
 
 const router = createBrowserRouter([
   {
     path: '/',
     element: <RootLayout />,
+    errorElement: <ErrorPage />,
     children: [
       { index: true, element: <Home /> },
       { path: 'listings', element: <BrowseListings /> },
@@ -31,6 +33,7 @@ const router = createBrowserRouter([
       {
         path: 'dashboard',
         element: <DashboardLayout />,
+        errorElement: <ErrorPage />,
         children: [
           { index: true, element: <SellerDashboard /> },
           { path: 'listings/new', element: <CreateListing /> },

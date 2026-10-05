@@ -36,7 +36,12 @@ function saveUser(user) {
 function loadUsers() {
   try {
     const saved = localStorage.getItem('fsbo_all_users')
-    return saved ? JSON.parse(saved) : MOCK_USERS
+    if (!saved) return MOCK_USERS
+    const stored = JSON.parse(saved)
+    // Always ensure seed users are present (merge by id, stored takes precedence)
+    const storedIds = new Set(stored.map((u) => u.id))
+    const merged = [...stored, ...MOCK_USERS.filter((u) => !storedIds.has(u.id))]
+    return merged
   } catch {
     return MOCK_USERS
   }
